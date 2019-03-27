@@ -1,3 +1,5 @@
+package com.objectlife.statelayout;
+
 /*
  * Copyright (C) 2016 objectlife
  *
@@ -14,42 +16,38 @@
  * limitations under the License.
  */
 
-package com.objectlife.statelayout;
-
 import android.content.Context;
-import android.support.annotation.IntDef;
+import android.content.res.TypedArray;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.support.annotation.IdRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.AbsSavedState;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
 /**
- *
- * A subclass of FrameLayout that can display different state of view.like contentView, emptyView,
- * errorView and loadingView. you can set state view by {@link #setContentView(View)} or {@link #setLoadingViewResId(int)},
- * and you can switch state by call {@link #setState(int)}.
- *
  * @author objectlife (wangyuyanmail[at]gmail[dot]com)
  */
 public class StateLayout extends FrameLayout {
 
-    @IntDef({VIEW_CONTENT, VIEW_EMPTY, VIEW_ERROR, VIEW_LOADING})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ViewState {}
+    public static final int STATE_NONE = 0b00000000;
+    public static final int STATE_DEFAULT = 0b00000001;
+    public static final int STATE_CONTENT = 0b00000010;
+    public static final int STATE_EMPTY = 0b00000100;
+    public static final int STATE_ERROR = 0b00001000;
+    public static final int STATE_LOADING = 0b00010000;
 
-    public static final int VIEW_CONTENT = 0x00000000;
-    public static final int VIEW_EMPTY   = 0x00000001;
-    public static final int VIEW_ERROR   = 0x00000002;
-    public static final int VIEW_LOADING = 0x00000003;
+    public static int custom(int i) {
+        return STATE_LOADING << (i+1);
+    }
 
-    private View mContentView;
-    private View mEmptyView;
-    private View mErrorView;
-    private View mLoadingView;
-
-    private int defViewState = VIEW_LOADING;
+    private int currentState = STATE_DEFAULT;
 
     public StateLayout(Context context) {
         this(context, null);
@@ -61,188 +59,205 @@ public class StateLayout extends FrameLayout {
 
     public StateLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init(context, attrs, defStyleAttr);
     }
 
-    /**
-     *<p>Set content view.</p>
-     * @param contentView The content view to add
-     * @return This StateLayout object to allow for chaining of calls to set methods
-     */
-    public StateLayout setContentView(View contentView) {
-        this.mContentView = contentView;
-        initStateView(mContentView);
-        return this;
-    }
+    private void init(Context context, AttributeSet attrs, int defStyleAttr) {
+        if (attrs != null) {
+            TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.StateLayout);
 
-    /**
-     *<p>Specify content view with the given id</p>
-     * @param viewResId The id to specify
-     * @return This StateLayout object to allow for chaining of calls to set methods
-     */
-    public StateLayout setContentViewResId(int viewResId) {
-        mContentView = findViewById(viewResId);
-        return this;
-    }
+            currentState = a.getInteger(R.styleable.StateLayout_initWith, currentState);
 
-    /**
-     *<p>Set empty view.</p>
-     * @param emptyView The empty view to add
-     * @return This StateLayout object to allow for chaining of calls to set methods
-     */
-    public StateLayout setEmptyView(View emptyView) {
-        this.mEmptyView = emptyView;
-        initStateView(mEmptyView);
-        return this;
-    }
-
-    /**
-     *<p>Specify empty view with the given id</p>
-     * @param viewResId The id to specify
-     * @return This StateLayout object to allow for chaining of calls to set methods
-     */
-    public StateLayout setEmptyViewResId(int viewResId) {
-        mEmptyView = findViewById(viewResId);
-        return this;
-    }
-
-    /**
-     *<p>set error view.</p>
-     * @param errorView the error view to add
-     * @return This StateLayout object to allow for chaining of calls to set methods
-     */
-    public StateLayout setErrorView(View errorView) {
-        this.mErrorView = errorView;
-        initStateView(mErrorView);
-        return this;
-    }
-
-    /**
-     *<p>Specify error view with the given id</p>
-     * @param viewResId The id to specify
-     * @return This StateLayout object to allow for chaining of calls to set methods
-     */
-    public StateLayout setErrorViewResId(int viewResId) {
-        mErrorView = findViewById(viewResId);
-        return this;
-    }
-
-    /**
-     *<p>Set loading view.</p>
-     * @param loadingView the loading view to add
-     * @return This StateLayout object to allow for chaining of calls to set methods
-     */
-    public StateLayout setLoadingView(View loadingView) {
-        this.mLoadingView = loadingView;
-        initStateView(mLoadingView);
-        return this;
-    }
-
-    /**
-     *<p>Specify loading view with the given id</p>
-     * @param viewResId The id to specify
-     * @return This StateLayout object to allow for chaining of calls to set methods
-     */
-    public StateLayout setLoadingViewResId(int viewResId) {
-        mLoadingView = findViewById(viewResId);
-        return this;
-    }
-
-    /**
-     * first init and call one of
-     * {@link #setContentView(View)}
-     * {@link #setEmptyView(View)}
-     * {@link #setErrorView(View)}
-     * {@link #setLoadingView(View)} ,you must call it to init state.
-     *
-     * @param state
-     */
-    public void initWithState(@ViewState int state) {
-        if (state == defViewState){// default view state
-            showLoadingView();
-        } else {
-            setState(state);
+            a.recycle();
         }
+
     }
 
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        showStateView(currentState);
+    }
 
-    public void setState(@ViewState int state) {
-        if (defViewState == state) {
-            return;
+    private StateLayout setView(int state, View stateView, boolean add) {
+        if (state == STATE_NONE) {
+            return this;
         }
-        defViewState = state;
-        switch (state) {
-            case VIEW_CONTENT:
-                showContentView();
-                break;
-
-            case VIEW_EMPTY:
-                showEmptyView();
-                break;
-
-            case VIEW_ERROR:
-                showErrorView();
-                break;
-
-            case VIEW_LOADING:
-                showLoadingView();
-                break;
-        }
-    }
-
-    /**
-     * Return the current view
-     *
-     * @return One of {@link #VIEW_CONTENT},{@link #VIEW_EMPTY},{@link #VIEW_ERROR},{@link #VIEW_LOADING}
-     */
-    public int getState(){
-        return defViewState;
-    }
-
-    private void initStateView(View stateView) {
-        if (stateView != null) {
+        ((LayoutParams) stateView.getLayoutParams()).state = state;
+        if (add) {
             addView(stateView);
         }
+        return this;
     }
 
-    private void showContentView() {
-        showView(mContentView);
-        hideView(mEmptyView);
-        hideView(mErrorView);
-        hideView(mLoadingView);
-    }
-
-    private void showEmptyView() {
-        showView(mEmptyView);
-        hideView(mContentView);
-        hideView(mErrorView);
-        hideView(mLoadingView);
-    }
-
-    private void showErrorView() {
-        showView(mErrorView);
-        hideView(mEmptyView);
-        hideView(mContentView);
-        hideView(mLoadingView);
-    }
-
-    private void showLoadingView() {
-        showView(mLoadingView);
-        hideView(mEmptyView);
-        hideView(mErrorView);
-        hideView(mContentView);
+    /**
+     * <p>Set state view.</p>
+     *
+     * @param state     The state of the view to add
+     * @param stateView The state view to add
+     * @return This StateLayout object to allow for chaining of calls to set methods
+     */
+    public StateLayout setView(int state, View stateView) {
+        return setView(state, stateView, false);
     }
 
 
-    private void showView(View view) {
-        if (view != null) {
-            view.setVisibility(VISIBLE);
+    public StateLayout addView(int state, View stateView) {
+        setView(state, stateView, true);
+        return this;
+    }
+
+    /**
+     * <p>Specify content view with the given id</p>
+     *
+     * @param state     The state of the view to add
+     * @param viewResId The id to specify
+     * @return This StateLayout object to allow for chaining of calls to set methods
+     */
+    public StateLayout setViewResId(int state, @IdRes int viewResId) {
+        setView(state, findViewById(viewResId));
+        return this;
+    }
+
+    public void initWith(int state) {
+        currentState = state;
+
+        if (ViewCompat.isAttachedToWindow(this)) {
+            showStateView(state);
         }
     }
 
-    private void hideView(View view) {
-        if (view != null) {
-            view.setVisibility(GONE);
+
+    public void setState(int state) {
+        if (currentState == state) {
+            return;
+        }
+        currentState = state;
+        showStateView(state);
+    }
+
+    public int getState() {
+        return currentState;
+    }
+
+    public boolean hasState(int state) {
+        return hasFlag(currentState, state);
+    }
+
+    private void showStateView(int state) {
+        Log.d("StateLayout", "show state = " + currentState);
+        for (int i = 0; i < getChildCount(); i++) {
+            final View child = getChildAt(i);
+            final int state1 = ((LayoutParams) child.getLayoutParams()).state;
+            child.setVisibility(hasFlag(state1, state) ? VISIBLE : GONE);
+            Log.d("StateLayout", "child state = " + state1);
         }
     }
 
+    private boolean hasFlag(int state, int flag) {
+        return (state & flag) != 0;
+    }
+
+    @Override
+    protected boolean checkLayoutParams(ViewGroup.LayoutParams p) {
+        return p instanceof LayoutParams;
+    }
+
+    @Override
+    protected LayoutParams generateDefaultLayoutParams() {
+        return new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+    }
+
+    @Override
+    protected LayoutParams generateLayoutParams(ViewGroup.LayoutParams lp) {
+        return new LayoutParams(lp);
+    }
+
+    @Override
+    public LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return new LayoutParams(getContext(), attrs);
+    }
+
+    @Nullable
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        final SavedState savedState = new SavedState(superState);
+        savedState.currentLayoutState = currentState;
+        return savedState;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+
+        SavedState savedState = (SavedState) state;
+        super.onRestoreInstanceState(savedState.getSuperState());
+    }
+
+    public static class SavedState extends AbsSavedState implements Parcelable {
+
+        int currentLayoutState;
+
+        protected SavedState(@NonNull Parcelable superState) {
+            super(superState);
+        }
+
+        protected SavedState(Parcel in, ClassLoader loader) {
+            super(in);
+            this.currentLayoutState = in.readInt();
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeInt(currentLayoutState);
+        }
+
+        public static final Creator<SavedState> CREATOR = new ClassLoaderCreator<SavedState>() {
+
+            @Override
+            public SavedState createFromParcel(Parcel in, ClassLoader loader) {
+                return new SavedState(in, loader);
+            }
+
+            @Override
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in, null);
+            }
+
+            @Override
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
+    }
+
+    public static class LayoutParams extends FrameLayout.LayoutParams {
+
+        private int state = -1;
+
+        public LayoutParams(int width, int height) {
+            super(width, height);
+        }
+
+        public LayoutParams(@NonNull ViewGroup.LayoutParams source) {
+            super(source);
+        }
+
+        public LayoutParams(@NonNull Context c, @Nullable AttributeSet attrs) {
+            super(c, attrs);
+
+            TypedArray a = c.obtainStyledAttributes(attrs,
+                    R.styleable.StateLayout_Layout);
+
+            state = a.getInteger(R.styleable.StateLayout_Layout_layout_state, -1);
+
+            a.recycle();
+        }
+    }
 }
+

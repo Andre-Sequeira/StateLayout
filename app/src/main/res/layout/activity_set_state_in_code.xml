@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.objectlife.statelayoutsample.SetStateInCodeActivity">
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:dividerPadding="4dp"
+        android:orientation="horizontal"
+        android:rowCount="2">
+
+        <Button
+            android:id="@+id/btn_content"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="content" />
+
+        <Button
+            android:id="@+id/btn_error"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="error" />
+
+        <Button
+            android:id="@+id/btn_loading"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="loading" />
+
+        <Button
+            android:id="@+id/btn_empty"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="empty" />
+
+        <Button
+            android:id="@+id/btn_custom"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="custom" />
+
+        <Button
+            android:id="@+id/btn_custom_loading"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="custom &amp; loading" />
+    </GridLayout>
+
+    <com.objectlife.statelayout.StateLayout
+        android:id="@+id/sl_layout_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include
+            android:id="@+id/v_content"
+            layout="@layout/view_content" />
+
+        <include
+            android:id="@+id/v_empty"
+            layout="@layout/view_empty" />
+
+        <include
+            android:id="@+id/v_error"
+            layout="@layout/view_error" />
+
+        <include
+            android:id="@+id/v_loading"
+            layout="@layout/view_loading" />
+
+        <include
+            android:id="@+id/v_custom"
+            layout="@layout/view_custom" />
+
+    </com.objectlife.statelayout.StateLayout>
+
+</LinearLayout>

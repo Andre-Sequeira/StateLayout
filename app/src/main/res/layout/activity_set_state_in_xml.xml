@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:dividerPadding="4dp"
+        android:orientation="horizontal"
+        android:rowCount="2">
+
+        <Button
+            android:id="@+id/btn_content"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="content" />
+
+        <Button
+            android:id="@+id/btn_error"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="error" />
+
+        <Button
+            android:id="@+id/btn_loading"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="loading" />
+
+        <Button
+            android:id="@+id/btn_empty"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="empty" />
+
+        <Button
+            android:id="@+id/btn_custom"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="custom" />
+
+        <Button
+            android:id="@+id/btn_custom_loading"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:text="custom &amp; loading" />
+    </GridLayout>
+
+    <com.objectlife.statelayout.StateLayout
+        android:id="@+id/sl_layout_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:initWith="content"
+        >
+
+        <TextView
+            android:id="@+id/v_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:layout_state="content"
+            android:text="Content"
+            android:textSize="35sp"/>
+
+        <TextView
+            android:id="@+id/v_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:layout_state="empty"
+            android:text="Empty"
+            android:textSize="35sp"/>
+
+        <TextView
+            android:id="@+id/v_error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_gravity="center"
+            app:layout_state="error"
+            android:text="Error"
+            android:textSize="35sp"/>
+
+
+        <ProgressBar
+            android:id="@+id/v_loading"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            app:layout_state="loading"
+            android:layout_gravity="center"
+            android:indeterminate="true"/>
+
+        <TextView
+            android:id="@+id/v_custom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:layout_state="32"
+            android:paddingTop="96dp"
+            android:text="Custom"
+            android:textSize="35sp"
+            />
+
+    </com.objectlife.statelayout.StateLayout>
+
+</LinearLayout>

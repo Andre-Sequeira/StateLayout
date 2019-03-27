@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="StateLayout">
+        <attr name="initWith" format="integer">
+            <enum name="none" value="0" />
+            <enum name="def" value="1" />
+            <enum name="content" value="2" />
+            <enum name="empty" value="4" />
+            <enum name="error" value="8" />
+            <enum name="loading" value="16" />
+        </attr>
+    </declare-styleable>
+    <declare-styleable name="StateLayout_Layout">
+        <attr name="layout_state" format="integer">
+            <flag name="def" value="1" />
+            <flag name="content" value="2" />
+            <flag name="empty" value="4" />
+            <flag name="error" value="8" />
+            <flag name="loading" value="16" />
+        </attr>
+    </declare-styleable>
+
+</resources>
